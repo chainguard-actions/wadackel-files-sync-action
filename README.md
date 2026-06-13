@@ -1,1 +1,15 @@
-# wadackel-files-sync-action
+# wadackel/files-sync-action
+
+A customizable action that synchronizes files across multiple repositories.
+
+Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at [https://github.com/wadackel/files-sync-action](https://github.com/wadackel/files-sync-action).
+
+## Versions
+
+| Version | Tag | Upstream commit |
+|---------|-----|-----------------|
+| v3.2.0 | [`v3.2.0`](https://github.com/chainguard-actions/wadackel-files-sync-action/tree/v3.2.0) | [`b474897`](https://github.com/wadackel/files-sync-action/commit/b47489781b14e0872f2f806a4b185e94d5f41233) |
+
+## Privacy
+
+This Action contacts Chainguard's licensing server to verify authorization. Connection metadata (IP address, GitHub repository identifier, timestamp, and any metadata encoded in the auth token) is transmitted to Chainguard, Inc. even if authorization is denied in accordance with our [Privacy Notice](https://www.chainguard.dev/legal/privacy-notice)
