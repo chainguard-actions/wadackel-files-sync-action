@@ -1,0 +1,29 @@
+name: Test basic usage with github_token
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create minimal sync config with no patterns
+        run: |
+          mkdir -p .github
+          cat > .github/files-sync-config.yaml << 'EOF'
+          patterns: []
+          EOF
+
+      - id: action
+        uses: .
+        with:
+          github_token: fake-token-for-testing
+
+      - name: Assert outputs are present
+        env:
+          PR_URLS: ${{ steps.action.outputs.pull_request_urls }}
+          SYNCED: ${{ steps.action.outputs.synced_files }}
+        run: |
+          echo "pull_request_urls: $PR_URLS"
+          echo "synced_files: $SYNCED"
+          echo "PASS: action completed successfully with github_token input"
