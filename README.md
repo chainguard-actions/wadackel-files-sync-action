@@ -9,6 +9,7 @@ Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at
 | Version | Tag | Upstream commit |
 |---------|-----|-----------------|
 | v3.2.0 | [`v3.2.0`](https://github.com/chainguard-actions/wadackel-files-sync-action/tree/v3.2.0) | [`b474897`](https://github.com/wadackel/files-sync-action/commit/b47489781b14e0872f2f806a4b185e94d5f41233) |
+| v3.4.0 | [`v3.4.0`](https://github.com/chainguard-actions/wadackel-files-sync-action/tree/v3.4.0) | [`cf7aa9e`](https://github.com/wadackel/files-sync-action/commit/cf7aa9e99291d9fd7801b8d9d0982aa5b01bfeaf) |
 
 ## Privacy
 
