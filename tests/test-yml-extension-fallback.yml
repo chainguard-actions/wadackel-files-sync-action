@@ -1,0 +1,40 @@
+name: Test yml extension fallback
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create config file with .yml extension
+        run: |
+          mkdir -p .github
+          cat > .github/files-sync-test.yml << 'EOF'
+          patterns: []
+          EOF
+
+      - name: Run action requesting .yaml extension (should fall back to .yml)
+        id: action
+        uses: .
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          config_file: .github/files-sync-test.yaml
+
+      - name: Assert action succeeded using yml extension fallback
+        env:
+          PR_URLS: ${{ steps.action.outputs.pull_request_urls }}
+          SYNCED_FILES: ${{ steps.action.outputs.synced_files }}
+        run: |
+          echo "pull_request_urls: $PR_URLS"
+          echo "synced_files: $SYNCED_FILES"
+          # With no patterns, no PRs or files should be synced
+          if [ -n "$PR_URLS" ] && [ "$PR_URLS" != "[]" ]; then
+            echo "FAIL: expected empty pull_request_urls but got: $PR_URLS"
+            exit 1
+          fi
+          if [ -n "$SYNCED_FILES" ] && [ "$SYNCED_FILES" != "[]" ]; then
+            echo "FAIL: expected empty synced_files but got: $SYNCED_FILES"
+            exit 1
+          fi
+          echo "PASS: action correctly fell back to .yml extension"

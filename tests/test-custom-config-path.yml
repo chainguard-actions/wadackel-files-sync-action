@@ -1,0 +1,46 @@
+name: Test custom config file path
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_REF: refs/heads/main
+      GITHUB_EVENT_NAME: push
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create custom sync config at non-default path
+        run: |
+          mkdir -p custom/config
+          cat > custom/config/sync.yaml << 'EOF'
+          patterns: []
+          EOF
+
+      - id: action
+        uses: .
+        with:
+          github_token: fake-token-for-custom-path-test
+          config_file: custom/config/sync.yaml
+
+      - name: Assert pull_request_urls is empty array
+        env:
+          ACTUAL: ${{ steps.action.outputs.pull_request_urls }}
+        run: |
+          echo "actual pull_request_urls: $ACTUAL"
+          if [ "$ACTUAL" != "[]" ]; then
+            echo "FAIL: expected '[]' but got '$ACTUAL'"
+            exit 1
+          fi
+          echo "PASS"
+
+      - name: Assert synced_files is empty array
+        env:
+          ACTUAL: ${{ steps.action.outputs.synced_files }}
+        run: |
+          echo "actual synced_files: $ACTUAL"
+          if [ "$ACTUAL" != "[]" ]; then
+            echo "FAIL: expected '[]' but got '$ACTUAL'"
+            exit 1
+          fi
+          echo "PASS"
