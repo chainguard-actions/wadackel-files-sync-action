@@ -1,0 +1,40 @@
+name: Test valid config with empty patterns
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create valid config file with empty patterns
+        run: |
+          mkdir -p tests/fixtures
+          cat > tests/fixtures/empty-patterns-config.yml << 'EOF'
+          patterns: []
+          EOF
+
+      - name: Run action with empty patterns config
+        id: action
+        uses: .
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          config_file: tests/fixtures/empty-patterns-config.yml
+
+      - name: Assert outputs are empty arrays
+        env:
+          PR_URLS: ${{ steps.action.outputs.pull_request_urls }}
+          SYNCED_FILES: ${{ steps.action.outputs.synced_files }}
+        run: |
+          echo "pull_request_urls: $PR_URLS"
+          echo "synced_files: $SYNCED_FILES"
+          # With no patterns, both outputs should be empty arrays or empty strings
+          if [ -n "$PR_URLS" ] && [ "$PR_URLS" != "[]" ]; then
+            echo "FAIL: expected pull_request_urls to be empty or '[]', got '$PR_URLS'"
+            exit 1
+          fi
+          if [ -n "$SYNCED_FILES" ] && [ "$SYNCED_FILES" != "[]" ]; then
+            echo "FAIL: expected synced_files to be empty or '[]', got '$SYNCED_FILES'"
+            exit 1
+          fi
+          echo "PASS: outputs are empty as expected for empty patterns"

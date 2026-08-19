@@ -1,0 +1,33 @@
+name: Test custom config file path
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create config file at a custom path
+        run: |
+          mkdir -p tests/fixtures/custom-path
+          cat > tests/fixtures/custom-path/sync-config.yml << 'EOF'
+          patterns: []
+          EOF
+
+      - name: Run action with custom config_file path
+        id: action
+        uses: .
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          config_file: tests/fixtures/custom-path/sync-config.yml
+
+      - name: Assert action succeeded with custom config path
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          if [ "$OUTCOME" != "success" ]; then
+            echo "FAIL: expected action to succeed with custom config path, but outcome was '$OUTCOME'"
+            exit 1
+          fi
+          echo "PASS: action correctly loaded config from custom path"

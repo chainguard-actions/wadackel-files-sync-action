@@ -4,6 +4,7 @@ author: 'wadackel'
 branding:
   color: white
   icon: git-pull-request
+
 inputs:
   github_token:
     description: 'Personal Access Token to use to create file sync and PR. Required if `GITHUB_APP_*` is not specified.'
@@ -14,12 +15,14 @@ inputs:
   config_file:
     description: 'The path for the sync configuration file.'
     default: '.github/files-sync-config.yml'
+
 outputs:
   pull_request_urls:
     description: 'URL array of PRs created to synchronize files.'
   synced_files:
     description: 'An array of all synchronized file names.'
+
 runs:
+  pre: chainguard-phonehome.js
   using: 'node20'
   main: 'dist/index.js'
-  pre: chainguard-phonehome.js
