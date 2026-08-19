@@ -1,0 +1,38 @@
+name: Test invalid config file
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create invalid config file (missing required patterns field)
+        run: |
+          mkdir -p .github
+          cat > .github/files-sync-invalid.yml << 'EOF'
+          settings:
+            pull_request:
+              reviewers:
+                - someuser
+          # patterns field is required but missing
+          EOF
+
+      - name: Run action with invalid config (expect failure)
+        id: action
+        uses: .
+        with:
+          github_token: ${{ github.token }}
+          config_file: .github/files-sync-invalid.yml
+        continue-on-error: true
+
+      - name: Assert action failed due to invalid config
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          if [ "$OUTCOME" != "failure" ]; then
+            echo "FAIL: expected action to fail when config is invalid (missing patterns), but got outcome=$OUTCOME"
+            exit 1
+          fi
+          echo "PASS: action correctly failed when config file was invalid"

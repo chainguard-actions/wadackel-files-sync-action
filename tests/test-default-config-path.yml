@@ -1,0 +1,39 @@
+name: Test default config file path
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create default config file at .github/files-sync-config.yml
+        run: |
+          mkdir -p .github
+          cat > .github/files-sync-config.yml << 'EOF'
+          patterns: []
+          EOF
+
+      - name: Run action using default config path (no config_file input)
+        id: action
+        uses: .
+        with:
+          github_token: ${{ github.token }}
+
+      - name: Assert action succeeded with default config path
+        env:
+          PR_URLS: ${{ steps.action.outputs.pull_request_urls }}
+          SYNCED: ${{ steps.action.outputs.synced_files }}
+        run: |
+          echo "pull_request_urls: $PR_URLS"
+          echo "synced_files: $SYNCED"
+          # With empty patterns, outputs should be empty
+          PR_NORM="$(echo "$PR_URLS" | tr -d '[:space:]')"
+          SYNCED_NORM="$(echo "$SYNCED" | tr -d '[:space:]')"
+          if ([ -z "$PR_NORM" ] || [ "$PR_NORM" = "[]" ]) && \
+             ([ -z "$SYNCED_NORM" ] || [ "$SYNCED_NORM" = "[]" ]); then
+            echo "PASS: action read default config path and produced empty outputs"
+          else
+            echo "FAIL: unexpected outputs: pull_request_urls=$PR_URLS synced_files=$SYNCED"
+            exit 1
+          fi

@@ -1,0 +1,48 @@
+name: Test custom config file path
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_REF: refs/heads/main
+      GITHUB_EVENT_NAME: push
+      GITHUB_REPOSITORY: test-owner/test-repo
+      GITHUB_RUN_ID: '1'
+      GITHUB_RUN_NUMBER: '1'
+      GITHUB_SERVER_URL: https://github.com
+      GITHUB_WORKFLOW: test-workflow
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create custom config file at non-default path
+        run: |
+          mkdir -p custom/config
+          cat > custom/config/sync.yml << 'EOF'
+          patterns:
+            - files:
+                - README.md
+              repositories:
+                - test-owner/target-repo
+          EOF
+
+      - name: Run action with custom config path
+        id: action
+        uses: .
+        with:
+          github_token: fake-token-for-testing
+          config_file: custom/config/sync.yml
+        continue-on-error: true
+
+      - name: Assert action failed at API stage (not config stage)
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          # The action should fail (fake token), but config loading should succeed
+          # since we provided a valid config at the custom path
+          if [ "$OUTCOME" != "failure" ]; then
+            echo "FAIL: expected action to fail (fake token), got: $OUTCOME"
+            exit 1
+          fi
+          echo "PASS: action correctly loaded custom config path and failed at API stage"

@@ -1,0 +1,30 @@
+name: 'E2E Testing'
+
+on:
+  push:
+    branches:
+      - main
+
+permissions: {}
+
+jobs:
+  test:
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+
+      - name: Generate token
+        id: generate_token
+        uses: actions/create-github-app-token@d72941d797fd3113feb6b93fd0dec494b13a2547 # v1
+        with:
+          app-id: ${{ secrets.GH_APP_E2E_ID }}
+          private-key: ${{ secrets.GH_APP_E2E_PRIVATE_KEY }}
+          owner: wadackel
+
+      - name: Sync Files
+        uses: ./
+        with:
+          github_token: ${{ steps.generate_token.outputs.token }}
+          config_file: '.github/files-sync-e2e-config.yml'
