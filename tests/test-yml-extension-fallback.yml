@@ -1,0 +1,33 @@
+name: Test yml extension fallback
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create config file with .yml extension
+        run: |
+          mkdir -p tests/fixtures/ext-fallback
+          cat > tests/fixtures/ext-fallback/sync-config.yml << 'EOF'
+          patterns: []
+          EOF
+
+      - name: Run action specifying .yaml extension (should fall back to .yml)
+        id: action
+        uses: .
+        with:
+          github_token: ${{ github.token }}
+          config_file: tests/fixtures/ext-fallback/sync-config.yaml
+
+      - name: Assert action succeeded with extension fallback
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          if [ "$OUTCOME" != "success" ]; then
+            echo "FAIL: expected action to succeed by falling back from .yaml to .yml extension, but got outcome=$OUTCOME"
+            exit 1
+          fi
+          echo "PASS: action correctly fell back from .yaml to .yml extension"

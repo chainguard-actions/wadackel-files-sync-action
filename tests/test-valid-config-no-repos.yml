@@ -1,0 +1,53 @@
+name: Test valid config with no repositories
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_REPOSITORY: test-owner/test-repo
+      GITHUB_RUN_ID: "1"
+      GITHUB_RUN_NUMBER: "1"
+      GITHUB_SERVER_URL: https://github.com
+      GITHUB_WORKFLOW: test-workflow
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create a valid config file with no repositories
+        run: |
+          mkdir -p .github
+          cat > .github/files-sync-config-empty.yaml << 'EOF'
+          patterns:
+            - files:
+                - README.md
+              repositories: []
+          EOF
+
+      - name: Run action with valid config (no repos to sync)
+        id: action
+        uses: .
+        with:
+          github_token: fake-token-for-testing
+          config_file: .github/files-sync-config-empty.yaml
+
+      - name: Assert pull_request_urls output is empty array
+        env:
+          PR_URLS: ${{ steps.action.outputs.pull_request_urls }}
+        run: |
+          echo "pull_request_urls: $PR_URLS"
+          if [ "$PR_URLS" != "[]" ]; then
+            echo "FAIL: expected pull_request_urls to be '[]', got '$PR_URLS'"
+            exit 1
+          fi
+          echo "PASS: pull_request_urls is empty array as expected"
+
+      - name: Assert synced_files output is empty array
+        env:
+          SYNCED: ${{ steps.action.outputs.synced_files }}
+        run: |
+          echo "synced_files: $SYNCED"
+          if [ "$SYNCED" != "[]" ]; then
+            echo "FAIL: expected synced_files to be '[]', got '$SYNCED'"
+            exit 1
+          fi
+          echo "PASS: synced_files is empty array as expected"
