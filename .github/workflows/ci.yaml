@@ -1,0 +1,71 @@
+name: 'ci'
+
+on:
+  pull_request:
+    types:
+      - synchronize
+      - opened
+      - reopened
+  push:
+    branches:
+      - main
+      - 'releases/*'
+
+permissions: {}
+
+jobs:
+  build_and_test:
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+
+      - uses: ./.github/actions/setup-node
+
+      - name: Build
+        run: pnpm build
+
+      - name: Compare the expected and actual dist/ directories
+        id: diff
+        run: |
+          if [ "$(git diff --ignore-space-at-eol dist/ | wc -l)" -gt "0" ]; then
+            echo "Detected uncommitted changes after build.  See status below:"
+            git diff
+            exit 1
+          fi
+
+      - name: Test
+        run: pnpm test
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Generate
+        run: |
+          pnpm generate
+          git diff --exit-code || exit 1
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+  publish:
+    runs-on: ubuntu-22.04
+    if: github.ref == 'refs/heads/main'
+    needs: build_and_test
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: ./.github/actions/setup-node
+
+      - name: Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: pnpm release

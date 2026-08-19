@@ -1,0 +1,35 @@
+name: Test yml/yaml extension fallback
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create config file with .yml extension
+        run: |
+          mkdir -p .github
+          # Create the file with .yml extension
+          cat > .github/files-sync-config.yml << 'EOF'
+          patterns: []
+          EOF
+
+      - name: Run action pointing to .yaml (should fallback to .yml)
+        id: action
+        uses: .
+        continue-on-error: true
+        with:
+          github_token: fake-token-for-testing
+          config_file: .github/files-sync-config.yaml
+
+      - name: Assert action succeeded via extension fallback
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          if [ "$OUTCOME" != "success" ]; then
+            echo "FAIL: expected action to succeed via .yml fallback when .yaml not found, got outcome=$OUTCOME"
+            exit 1
+          fi
+          echo "PASS: action correctly fell back to .yml extension"

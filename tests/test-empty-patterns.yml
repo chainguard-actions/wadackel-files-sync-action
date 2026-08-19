@@ -1,0 +1,51 @@
+name: Test empty patterns config
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create config file with empty patterns
+        run: |
+          mkdir -p tests/fixtures/empty-patterns
+          cat > tests/fixtures/empty-patterns/files-sync-config.yaml << 'EOF'
+          patterns: []
+          EOF
+
+      - name: Run action with empty patterns config
+        id: action
+        uses: .
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          config_file: tests/fixtures/empty-patterns/files-sync-config.yaml
+
+      - name: Assert pull_request_urls output is empty array
+        env:
+          PR_URLS: ${{ steps.action.outputs.pull_request_urls }}
+        run: |
+          echo "pull_request_urls: $PR_URLS"
+          # With no patterns, no PRs should be created — output should be empty or an empty array
+          NORM="$(echo "$PR_URLS" | tr -d '[:space:]')"
+          if [ -z "$NORM" ] || [ "$NORM" = "[]" ]; then
+            echo "PASS: pull_request_urls is empty as expected"
+          else
+            echo "FAIL: expected empty pull_request_urls but got: $PR_URLS"
+            exit 1
+          fi
+
+      - name: Assert synced_files output is empty array
+        env:
+          SYNCED: ${{ steps.action.outputs.synced_files }}
+        run: |
+          echo "synced_files: $SYNCED"
+          # With no patterns, no files should be synced — output should be empty or an empty array
+          NORM="$(echo "$SYNCED" | tr -d '[:space:]')"
+          if [ -z "$NORM" ] || [ "$NORM" = "[]" ]; then
+            echo "PASS: synced_files is empty as expected"
+          else
+            echo "FAIL: expected empty synced_files but got: $SYNCED"
+            exit 1
+          fi
