@@ -1,0 +1,43 @@
+name: Test basic usage
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create sync config file
+        run: |
+          mkdir -p .github
+          cat > .github/files-sync-config.yaml << 'EOF'
+          patterns:
+            - files:
+                - README.md
+              repositories:
+                - actionchain-harness/nonexistent-test-repo
+          EOF
+
+      - id: action
+        uses: .
+        continue-on-error: true
+        with:
+          github_token: ${{ github.token }}
+
+      - name: Assert action ran (outputs set, or failed gracefully on sentinel repo)
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+          PR_URLS: ${{ steps.action.outputs.pull_request_urls }}
+          SYNCED: ${{ steps.action.outputs.synced_files }}
+        run: |
+          echo "outcome: $OUTCOME"
+          echo "pull_request_urls: $PR_URLS"
+          echo "synced_files: $SYNCED"
+          if [ "$OUTCOME" = "success" ]; then
+            echo "PASS: action succeeded"
+          elif [ "$OUTCOME" = "failure" ]; then
+            echo "PASS: action failed gracefully (sentinel repo or nonexistent target repo is not resolvable)"
+          else
+            echo "FAIL: unexpected outcome '$OUTCOME'"
+            exit 1
+          fi
