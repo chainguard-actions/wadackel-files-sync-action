@@ -16,6 +16,7 @@ Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at
 | v3.6.1 | [`v3.6.1`](https://github.com/chainguard-actions/wadackel-files-sync-action/tree/v3.6.1) | [`e04152e`](https://github.com/wadackel/files-sync-action/commit/e04152e8b76e48364fa95b62803a1c0cf6381a82) |
 | v4.0.0 | [`v4.0.0`](https://github.com/chainguard-actions/wadackel-files-sync-action/tree/v4.0.0) | [`cf47cc4`](https://github.com/wadackel/files-sync-action/commit/cf47cc4f64ab9420dd905496638a913365e087d3) |
 | v4.0.1 | [`v4.0.1`](https://github.com/chainguard-actions/wadackel-files-sync-action/tree/v4.0.1) | [`bf84e6c`](https://github.com/wadackel/files-sync-action/commit/bf84e6cddf8f178a8265873e97f31620101df830) |
+| v4.0.2 | [`v4.0.2`](https://github.com/chainguard-actions/wadackel-files-sync-action/tree/v4.0.2) | [`80fcb2d`](https://github.com/wadackel/files-sync-action/commit/80fcb2d79aa9b44b23b9e2a742d3073a34c0c7bc) |
 
 ## Privacy
 
