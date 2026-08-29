@@ -1,0 +1,45 @@
+name: Test custom config file path with yml extension fallback
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create config at custom path with .yml extension
+        run: |
+          mkdir -p custom-config-dir
+          cat > custom-config-dir/sync-config.yml << 'EOF'
+          patterns: []
+          EOF
+
+      - id: action
+        uses: .
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          # Reference .yaml but the file is .yml — tests the extension fallback in loadConfig
+          config_file: custom-config-dir/sync-config.yaml
+
+      - name: Assert action succeeded with custom config path (yml extension fallback)
+        env:
+          PR_URLS: ${{ steps.action.outputs.pull_request_urls }}
+          SYNCED_FILES: ${{ steps.action.outputs.synced_files }}
+        run: |
+          echo "pull_request_urls: $PR_URLS"
+          echo "synced_files: $SYNCED_FILES"
+          # With empty patterns, outputs should be empty
+          NORM_PR="$(echo "$PR_URLS" | tr -d '[:space:]')"
+          NORM_SF="$(echo "$SYNCED_FILES" | tr -d '[:space:]')"
+          if [ -z "$NORM_PR" ] || [ "$NORM_PR" = "[]" ]; then
+            echo "PASS: pull_request_urls is empty as expected"
+          else
+            echo "FAIL: expected empty pull_request_urls but got: $PR_URLS"
+            exit 1
+          fi
+          if [ -z "$NORM_SF" ] || [ "$NORM_SF" = "[]" ]; then
+            echo "PASS: synced_files is empty as expected"
+          else
+            echo "FAIL: expected empty synced_files but got: $SYNCED_FILES"
+            exit 1
+          fi
