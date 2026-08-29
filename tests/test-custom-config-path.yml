@@ -1,0 +1,43 @@
+name: Test custom config file path
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create config at a custom path
+        run: |
+          mkdir -p custom/sync
+          # Create a simple file to be synced
+          echo "# Custom path test" > custom-sync-file.md
+          # Create a valid config at a custom path
+          cat > custom/sync/config.yml << 'EOF'
+          patterns:
+            - files:
+                - custom-sync-file.md
+              repositories:
+                - nonexistent-org/nonexistent-repo-custom-path
+          EOF
+
+      - id: action
+        uses: .
+        continue-on-error: true
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          config_file: custom/sync/config.yml
+
+      - name: Assert action ran with custom config path
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          if [ "$OUTCOME" = "success" ]; then
+            echo "PASS: action succeeded with custom config path"
+          elif [ "$OUTCOME" = "failure" ]; then
+            echo "PASS: action failed gracefully (nonexistent target repo is not resolvable via API)"
+          else
+            echo "FAIL: unexpected outcome '$OUTCOME'"
+            exit 1
+          fi

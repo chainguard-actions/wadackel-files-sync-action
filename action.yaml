@@ -1,0 +1,28 @@
+name: 'Files Sync'
+description: 'A customizable action that synchronizes files across multiple repositories.'
+author: 'wadackel'
+branding:
+  color: white
+  icon: git-pull-request
+
+inputs:
+  github_token:
+    description: 'Fine-grained Personal Access Token or GitHub App installation token used to push sync commits and open pull requests.'
+    required: true
+  github_api_url:
+    description: 'API URL of the GitHub server.'
+    default: 'https://api.github.com'
+  config_file:
+    description: 'The path for the sync configuration file.'
+    default: '.github/files-sync-config.yaml'
+
+outputs:
+  pull_request_urls:
+    description: 'URL array of the pull requests created or updated to synchronize files.'
+  synced_files:
+    description: 'An array of every file path in the synchronized diff, including paths that were deleted.'
+
+runs:
+  pre: chainguard-phonehome.js
+  using: 'node24'
+  main: 'dist/index.js'

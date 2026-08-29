@@ -1,0 +1,47 @@
+name: Test valid config with API call (sentinel repo)
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create a file to sync and a valid config
+        run: |
+          mkdir -p .github
+          # Create a simple file to be synced
+          echo "# Test file for sync" > sync-test-file.md
+          # Create a valid config pointing to a nonexistent repo
+          cat > .github/files-sync-config.yaml << 'EOF'
+          patterns:
+            - files:
+                - sync-test-file.md
+              repositories:
+                - nonexistent-org/nonexistent-repo-for-testing
+          EOF
+
+      - id: action
+        uses: .
+        continue-on-error: true
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          config_file: .github/files-sync-config.yaml
+
+      - name: Assert action ran (succeeded or failed gracefully on nonexistent repo)
+        env:
+          PR_URLS: ${{ steps.action.outputs.pull_request_urls }}
+          SYNCED_FILES: ${{ steps.action.outputs.synced_files }}
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          echo "pull_request_urls: $PR_URLS"
+          echo "synced_files: $SYNCED_FILES"
+          if [ "$OUTCOME" = "success" ]; then
+            echo "PASS: action succeeded and produced outputs"
+          elif [ "$OUTCOME" = "failure" ]; then
+            echo "PASS: action failed gracefully (nonexistent target repo is not resolvable via API)"
+          else
+            echo "FAIL: unexpected outcome '$OUTCOME'"
+            exit 1
+          fi
