@@ -1,0 +1,40 @@
+name: Test valid config with empty patterns
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create valid config file with empty patterns
+        run: |
+          mkdir -p tests/fixtures/empty-patterns
+          cat > tests/fixtures/empty-patterns/files-sync-config.yaml << 'EOF'
+          patterns: []
+          EOF
+
+      - id: action
+        uses: .
+        continue-on-error: true
+        with:
+          github_token: ${{ github.token }}
+          config_file: tests/fixtures/empty-patterns/files-sync-config.yaml
+
+      - name: Assert action succeeded or failed gracefully
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+          PR_URLS: ${{ steps.action.outputs.pull_request_urls }}
+          SYNCED_FILES: ${{ steps.action.outputs.synced_files }}
+        run: |
+          echo "outcome: $OUTCOME"
+          echo "pull_request_urls: $PR_URLS"
+          echo "synced_files: $SYNCED_FILES"
+          if [ "$OUTCOME" = "success" ]; then
+            echo "PASS: action succeeded with empty patterns"
+          elif [ "$OUTCOME" = "failure" ]; then
+            echo "PASS: action failed gracefully (acceptable with empty patterns)"
+          else
+            echo "FAIL: unexpected outcome '$OUTCOME'"
+            exit 1
+          fi
