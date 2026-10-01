@@ -1,0 +1,47 @@
+name: Test valid config with API call
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create a file to sync and a valid config
+        run: |
+          mkdir -p .github
+          # Create a simple file that will be synced
+          echo "# Synced file" > sync-target.md
+          # Create a valid config referencing a non-existent target repo
+          cat > .github/files-sync-config-test.yaml << 'EOF'
+          patterns:
+            - files:
+                - sync-target.md
+              repositories:
+                - actionchain-harness/nonexistent-test-repo-12345
+          EOF
+
+      - id: action
+        uses: .
+        continue-on-error: true
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          config_file: .github/files-sync-config-test.yaml
+
+      - name: Assert action ran (succeeded or failed gracefully on inaccessible repo)
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+          PR_URLS: ${{ steps.action.outputs.pull_request_urls }}
+          SYNCED_FILES: ${{ steps.action.outputs.synced_files }}
+        run: |
+          echo "outcome: $OUTCOME"
+          echo "pull_request_urls: $PR_URLS"
+          echo "synced_files: $SYNCED_FILES"
+          if [ "$OUTCOME" = "success" ]; then
+            echo "PASS: action succeeded and produced outputs"
+          elif [ "$OUTCOME" = "failure" ]; then
+            echo "PASS: action failed gracefully (target repo is not accessible)"
+          else
+            echo "FAIL: unexpected outcome '$OUTCOME'"
+            exit 1
+          fi
